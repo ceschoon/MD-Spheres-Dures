@@ -5,8 +5,6 @@
  * 																			*
  * 	Usage: ./testMove <tMax> <dt>											*
  *																			*
- * 	Compilation flags pour debugging: 										*
- * 		-DDEBUG1: Localise une seg fault									*
  *	Auteur: Cédric Schoonen													*
  *																			*
  ****************************************************************************/
@@ -43,10 +41,6 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	
 	if (argc>1){tMax = atof(argv[1]);} 	// attention mauvais inputs
 	if (argc>2){dt = atof(argv[2]);} 	// attention mauvais inputs
-	
-	#ifdef DEBUG2
-	cout << "tMax = " << tMax << "	dt = " << dt << endl;
-	#endif // DEBUG2
 	
 	/* Test du code */
 	

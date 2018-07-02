@@ -22,11 +22,7 @@ double dot(vector<double> x, vector<double> y)
 vector<double> collide(	vector<double> v0, 
 					  	vector<double> r1,
 						vector<double> r2)
-{
-	#ifdef DEBUG1
-	cout << "entré dans collide" << endl;
-	#endif // DEBUG1
-	
+{	
 	vector<double> axis(3,0); // r2-r1
 	for (int i=0; i<3; i++) {axis[i] = r2[i]-r1[i];}
 	
@@ -34,10 +30,6 @@ vector<double> collide(	vector<double> v0,
 	
 	vector<double> v(3,0);
 	for (int i=0; i<3; i++) {v[i] = v0[i] - 2*lambda*axis[i];}
-	
-	#ifdef DEBUG1
-	cout << "sort de collide" << endl;
-	#endif // DEBUG1
 	
 	return v;
 }
@@ -53,11 +45,7 @@ void move(	vector<vector<double>> &r,
 			vector<vector<double>> &v,
 			vector<double> boxDimensions,
 			double dt)
-{
-	#ifdef DEBUG1
-	cout << "entré dans move" << endl;
-	#endif // DEBUG1
-	
+{	
 	int N = r.size(); // nombre de particules
 	int lx = boxDimensions[0];
 	int ly = boxDimensions[1];
@@ -155,8 +143,4 @@ void move(	vector<vector<double>> &r,
 				{r[i][j] = r[i][j] - boxDimensions[j];}
 		}
 	}
-	
-	#ifdef DEBUG1
-	cout << "sort de move" << endl;
-	#endif // DEBUG1
 }
