@@ -18,12 +18,17 @@ using std::vector;
 /*
  * La routine "move" avance le système de particules de "dt" dans le temps
  * en recalculant d'abord les vitesses si il y a collision entre les 
- * particules (chevauchement).	
+ * particules (chevauchement). 
+ * 
+ * Cette routine enregistre également les grandeurs suivantes: 
+ * 	-	Le produit vij.rij pour chaque collision. Cette 
+ * 		variable est écrite dans le fichier "data/collisionData.dat"
  */ 
  
 void move(	vector<vector<double>> &r,
 			vector<vector<double>> &v,
 			vector<double> boxDimensions,
-			double dt);
+			double dt,
+			double t); // temps avant +dt
 
 #endif // MOVE_HPP

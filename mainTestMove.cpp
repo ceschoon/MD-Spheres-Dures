@@ -45,19 +45,20 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	/* Test du code */
 	
 	int nt = int(tMax/dt) + 1;
+	double t = 0;
 
 	vector<vector<double>> r; r.clear();
 	vector<vector<double>> v; v.clear();
-	vector<double> boxDimensions = {6,6,6};
+	vector<double> boxDimensions = {7,7,7};
 	
 	r.push_back({0,0,0}); v.push_back({1,0,0});
 	r.push_back({3,0,0}); v.push_back({-1,0,0});
 	
 	for (int i=0; i<nt; i++)
 	{
-		double t = t+dt;
-		cout << "t = " << t << endl;
-		move(r,v,boxDimensions,dt);
+		cout << "t = " << t+dt << endl;
+		move(r,v,boxDimensions,dt,t);
 		printParticles(r,v);
+		t = t+dt;
 	}
 }

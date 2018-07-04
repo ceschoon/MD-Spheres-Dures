@@ -1,6 +1,7 @@
 #include "move.hpp"
 #include <math.h>
 #include <iostream>
+#include <fstream>
 
 using std::vector;
 using std::cout;
@@ -12,28 +13,41 @@ double dot(vector<double> x, vector<double> y)
 }
 
 /*
- * La fonction "collide" renvoie la vitesse V1 d'une particule située en r1,
- * initialement à une vitesse v1, après collision avec une autre particule 
- * située en r2, initialement à une vitesse v2.
+ * La fonction "collide" modifie les vitesses de deux particules étant entrées
+ * en collision.
  *
- * On a V1 = v1 + proj , avec proj la projection de v2-v1 sur r2-r1
+ * On a V1 = v1 + proj et V2 = v2 + proj, avec proj la projection de v2-v1 
+ * sur r2-r1, Vi désignant les nouvelles vitesses
  */
 
-vector<double> collide(	vector<double> v1, vector<double> v2,
-					  	vector<double> r1, vector<double> r2)
+void collide(vector<double> &v1, vector<double> &v2,
+			 vector<double> &r1, vector<double> &r2,
+			 double t) // pour dater l'enregistrement de vij.rij
 {	
+	/* Calcul des nouvelles vitesses */
+	
 	vector<double> r12(3,0); // r2-r1
 	for (int i=0; i<3; i++) {r12[i] = r2[i]-r1[i];}
 	
 	vector<double> v12(3,0); // v2-v1
 	for (int i=0; i<3; i++) {v12[i] = v2[i]-v1[i];}
 	
-	double lambda = dot(v12, r12)/dot(r12,r12); 
+	double vDotr = dot(v12, r12);
+	double lambda = vDotr/dot(r12,r12); 
 	
-	vector<double> V1(3,0);
-	for (int i=0; i<3; i++) {V1[i] = v1[i] + lambda*r12[i];}
+	for (int i=0; i<3; i++) {v1[i] = v1[i] + lambda*r12[i];}
+	for (int i=0; i<3; i++) {v2[i] = v2[i] - lambda*r12[i];}
 	
-	return V1;
+	/* Enregistre vij.rij pour le calcul de la pression */
+	
+	std::ofstream file("data/collisionData.dat", std::ios_base::app);
+	if (file)
+	{
+		file << t << ", " << vDotr << endl;
+	}
+	else { cout << "Unable to open file \"data/collisionData.dat\"" << endl;}
+	
+	file.close();
 }
 
 /*
@@ -46,7 +60,8 @@ vector<double> collide(	vector<double> v1, vector<double> v2,
 void move(	vector<vector<double>> &r,
 			vector<vector<double>> &v,
 			vector<double> boxDimensions,
-			double dt)
+			double dt,
+			double t)
 {	
 	int N = r.size(); // nombre de particules
 	int lx = boxDimensions[0];
@@ -109,6 +124,9 @@ void move(	vector<vector<double>> &r,
 	}
 	
 	/*
+	 * On cherche maintenant les paires qui collisionnent et on traite
+	 * la collision dans ce cas.
+	 * 
 	 * Remarque: Si il y a des collision à plus de 2 corps, l'ordre de 
 	 * traitement des collisions sera fixé par l'ordre d'apparition des
 	 * particules dans les vecteurs r et v. Le véritable ordre physique des
@@ -123,10 +141,10 @@ void move(	vector<vector<double>> &r,
 							+pow(r[i][1]-r2[j][1],2)
 							+pow(r[i][2]-r2[j][2],2));				
 			
-			if (d < 2)
+			if (d < 2) // chevauchement => collision
 			{	
-				v[i] = collide(v[i],v[j],r[i],r2[j]);
-				v[j] = collide(v[j],v[i],r2[j],r[i]);
+				collide(v[i],v[j],r[i],r2[j],t);
+				cout << "coucou, d = " << d << endl;
 			}
 		}
 	}
