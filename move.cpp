@@ -1,5 +1,7 @@
 #include "move.hpp"
 #include <math.h>
+#include <algorithm>
+#include <numeric>
 #include <iostream>
 #include <fstream>
 
@@ -7,68 +9,50 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-double dot(vector<double> x, vector<double> y)
-{
-	return x[0]*y[0]+x[1]*y[1]+x[2]*y[2];
-}
+/******************************************************************************/
 
-/*
- * La fonction "collide" modifie les vitesses de deux particules étant entrées
- * en collision.
- *
- * On a V1 = v1 + proj et V2 = v2 + proj, avec proj la projection de v2-v1 
- * sur r2-r1, Vi désignant les nouvelles vitesses
- */
-
-void collide(vector<double> &v1, vector<double> &v2,
-			 vector<double> &r1, vector<double> &r2,
-			 double t) // pour dater l'enregistrement de vij.rij
-{	
-	/* Calcul des nouvelles vitesses */
-	
-	vector<double> r12(3,0); // r2-r1
-	for (int i=0; i<3; i++) {r12[i] = r2[i]-r1[i];}
-	
-	vector<double> v12(3,0); // v2-v1
-	for (int i=0; i<3; i++) {v12[i] = v2[i]-v1[i];}
-	
-	double vDotr = dot(v12, r12);
-	double lambda = vDotr/dot(r12,r12); 
-	
-	for (int i=0; i<3; i++) {v1[i] = v1[i] + lambda*r12[i];}
-	for (int i=0; i<3; i++) {v2[i] = v2[i] - lambda*r12[i];}
-	
-	/* Enregistre vij.rij pour le calcul de la pression */
-	
-	std::ofstream file("data/collisionData.dat", std::ios_base::app);
-	if (file)
-	{
-		file << t << ", " << vDotr << endl;
-	}
-	else { cout << "Unable to open file \"data/collisionData.dat\"" << endl;}
-	
-	file.close();
-}
-
-/*
- * La routine "move" déplace d'abord toutes les particules selon 
- * r(t+dt) = r(t) + v(t)*dt, en tenant compte de la périodicité.
- * Ensuite, les vitesses sont recalculées pour les particules subissant une
- * collision. 
+/* 
+ * Morceau de code servant à trier un vecteur tout en conservant les indices.
+ * Trouvé à l'adresse https://stackoverflow.com/questions/1577475/c-sorting-and-keeping-track-of-indexes
  */
  
-void move(	vector<vector<double>> &r,
-			vector<vector<double>> &v,
-			vector<double> boxDimensions,
-			double dt,
-			double t)
+template <typename T>
+vector<size_t> sort_indexes(const vector<T> &v) {
+
+  // initialize original index locations
+  vector<size_t> idx(v.size());
+  std::iota(idx.begin(), idx.end(), 0);
+
+  // sort indexes based on comparing values in v
+  std::sort(idx.begin(), idx.end(),
+       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+
+  return idx;
+}
+
+/******************************************************************************/
+
+/* Implémentation de la fonction "pairList" */
+ 
+pairsIndDist pairList(vector<vector<double>> r,
+					  vector<double> boxDimensions,
+					  double dMax)
 {	
-	int N = r.size(); // nombre de particules
+	int N = r.size();
 	int lx = boxDimensions[0];
 	int ly = boxDimensions[1];
 	int lz = boxDimensions[2];
 	
-	/* Traitement des collisions */
+	vector<int> indicesPart1, indicesPart1Sorted;
+	vector<int> indicesPart2, indicesPart2Sorted;
+	vector<double> distances, distancesSorted;
+	
+	indicesPart1.reserve(N);
+	indicesPart2.reserve(N);
+	distances.reserve(N);
+	indicesPart1Sorted.reserve(N);
+	indicesPart2Sorted.reserve(N);
+	distancesSorted.reserve(N);
 	
 	/* 
 	 * On commence par créer une liste des particules pouvant collisionner 
@@ -77,8 +61,8 @@ void move(	vector<vector<double>> &r,
 	 * particule se trouvant dans une des 27 copies voisines de notre système.
 	 */	
 	 
-	vector<vector<double>> r2; r2.clear();
-	vector<vector<double>> copies; copies.clear(); 
+	vector<vector<double>> r2;
+	vector<vector<double>> copies;
 	
 	copies.push_back({ 0, 0, 0}); //1
 	
@@ -123,15 +107,10 @@ void move(	vector<vector<double>> &r,
 		}
 	}
 	
-	/*
-	 * On cherche maintenant les paires qui collisionnent et on traite
-	 * la collision dans ce cas.
-	 * 
-	 * Remarque: Si il y a des collision à plus de 2 corps, l'ordre de 
-	 * traitement des collisions sera fixé par l'ordre d'apparition des
-	 * particules dans les vecteurs r et v. Le véritable ordre physique des
-	 * collisions est ignoré.
-	 */ 
+	/* 
+	 * On collecte maintenant les informations voulues pour chaque paire
+	 * de séparation d <= dMax.
+	 */
 	
 	for (int i=0; i<N; i++)
 	{
@@ -141,12 +120,120 @@ void move(	vector<vector<double>> &r,
 							+pow(r[i][1]-r2[j][1],2)
 							+pow(r[i][2]-r2[j][2],2));				
 			
-			if (d < 2) // chevauchement => collision
+			if (d <= dMax) 
 			{	
-				collide(v[i],v[j],r[i],r2[j],t);
-				cout << "coucou, d = " << d << endl;
+				indicesPart1.push_back(i);
+				indicesPart2.push_back(j%N); // modulo pour copie (0,0,0)
+				distances.push_back(d);
 			}
 		}
+	}
+	
+	/* Tri des paires selon la distance */
+	
+	for (auto i: sort_indexes(distances)) 
+	{
+		indicesPart1Sorted.push_back(indicesPart1[i]);
+		indicesPart2Sorted.push_back(indicesPart2[i]);
+		distancesSorted.push_back(distances[i]);
+	}
+	
+	/*pairsIndDist pairs;
+	pairs.indiciesPart1 = indiciesPart1;
+	pairs.indiciesPart2 = indiciesPart2;
+	pairs.distances = distances;*/
+	
+	return {indicesPart1Sorted, indicesPart2Sorted, distancesSorted};
+}
+
+/******************************************************************************/
+
+/* Implémentation de la routine "collide", nécessaire à la routine "move" */
+
+double dot(vector<double> x, vector<double> y)
+{
+	return x[0]*y[0]+x[1]*y[1]+x[2]*y[2];
+}
+
+/*
+ * La routine "collide" modifie les vitesses de deux particules étant entrées
+ * en collision.
+ *
+ * On a V1 = v1 + proj et V2 = v2 + proj, avec proj la projection de v2-v1 
+ * sur r2-r1, Vi désignant les nouvelles vitesses
+ */
+
+void collide(vector<double> &v1, vector<double> &v2,
+			 vector<double> &r1, vector<double> &r2,
+			 double t) // pour dater l'enregistrement de vij.rij
+{	
+	/* Calcul des nouvelles vitesses */
+	
+	vector<double> r12(3); // r2-r1
+	for (int i=0; i<3; i++) {r12[i] = r2[i]-r1[i];}
+	
+	vector<double> v12(3); // v2-v1
+	for (int i=0; i<3; i++) {v12[i] = v2[i]-v1[i];}
+	
+	double vDotr = dot(v12, r12);
+	double lambda = vDotr/dot(r12,r12); 
+	
+	for (int i=0; i<3; i++) {v1[i] = v1[i] + lambda*r12[i];}
+	for (int i=0; i<3; i++) {v2[i] = v2[i] - lambda*r12[i];}
+	
+	/* Enregistre vij.rij pour le calcul de la pression */
+	
+	std::ofstream file("data/collisionData.dat", std::ios_base::app);
+	if (file)
+	{
+		file << t << ", " << vDotr << endl;
+	}
+	else { cout << "Unable to open file \"data/collisionData.dat\"" << endl;}
+	
+	file.close();
+}
+
+/******************************************************************************/
+
+/* Implémentation de la routine "move" */
+
+/*
+ * La routine "move" recalcule les vitesses pour les particules subissant une
+ * collision. Ensuite, elle déplace toutes les particules selon r(t+dt) = 
+ * r(t) + v(t)*dt, en tenant compte de la périodicité.
+ */
+ 
+void move(	vector<vector<double>> &r,
+			vector<vector<double>> &v,
+			vector<double> boxDimensions,
+			pairsIndDist pairs,
+			double dt,
+			double t)
+{	
+	int N = r.size(); // nombre de particules
+	
+	/* Traitement des collisions */
+	
+	/*
+	 * On cherche les paires qui collisionnent et on traite
+	 * la collision dans ce cas.
+	 * 
+	 * Remarque: Le véritable ordre physique des collisions à plus de 2 corps
+	 * n'est pas respecté.
+	 */ 
+	
+	for (int i=0; i<pairs.distances.size(); i++)
+	{
+		double d = pairs.distances[i];
+		
+		if (d < 2) // chevauchement => collision
+		{
+			int i1 = pairs.indicesPart1[i];
+			int i2 = pairs.indicesPart2[i]; 
+			
+			collide(v[i1],v[i2],r[i1],r[i2],t);
+		}
+		else {break;}
 	}
 	
 	/* Déplacement des particules */

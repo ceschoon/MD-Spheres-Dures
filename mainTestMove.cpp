@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	
 	double tMax = 1;
 	double dt = 0.05;
+	double dMax = 3.5;
 	
 	/* Récupération des paramètres donnés en argument */
 	
@@ -57,7 +58,8 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	for (int i=0; i<nt; i++)
 	{
 		cout << "t = " << t+dt << endl;
-		move(r,v,boxDimensions,dt,t);
+		pairsIndDist pairs = pairList(r,boxDimensions,dMax);
+		move(r,v,boxDimensions,pairs,dt,t);
 		printParticles(r,v);
 		t = t+dt;
 	}
