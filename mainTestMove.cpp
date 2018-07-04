@@ -10,6 +10,7 @@
  ****************************************************************************/
 
 #include "move.hpp"
+#include "observables.hpp"
 #include <vector>
 #include <iostream>
 
@@ -37,6 +38,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	double tMax = 1;
 	double dt = 0.05;
 	double dMax = 3.5;
+	double dr = 0.1;
 	
 	/* Récupération des paramètres donnés en argument */
 	
@@ -48,8 +50,8 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	int nt = int(tMax/dt) + 1;
 	double t = 0;
 
-	vector<vector<double>> r; r.clear();
-	vector<vector<double>> v; v.clear();
+	vector<vector<double>> r;
+	vector<vector<double>> v;
 	vector<double> boxDimensions = {7,7,7};
 	
 	r.push_back({0,0,0}); v.push_back({1,0,0});
@@ -60,7 +62,10 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 		cout << "t = " << t+dt << endl;
 		pairsIndDist pairs = pairList(r,boxDimensions,dMax);
 		move(r,v,boxDimensions,pairs,dt,t);
+		pairDensity(pairs,dMax,dr);
 		printParticles(r,v);
 		t = t+dt;
 	}
+	
+	return 0;
 }
