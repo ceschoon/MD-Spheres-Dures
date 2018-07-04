@@ -12,26 +12,28 @@ double dot(vector<double> x, vector<double> y)
 }
 
 /*
- * La fonction "collide" renvoie la vitesse v d'une particule située en r1,
- * initialement à une vitesse v0, après collision avec une autre particule 
- * située en r2.
+ * La fonction "collide" renvoie la vitesse V1 d'une particule située en r1,
+ * initialement à une vitesse v1, après collision avec une autre particule 
+ * située en r2, initialement à une vitesse v2.
  *
- * On a v = v0 - 2*proj , avec proj la projection de v0 sur r2-r1
+ * On a V1 = v1 + proj , avec proj la projection de v2-v1 sur r2-r1
  */
 
-vector<double> collide(	vector<double> v0, 
-					  	vector<double> r1,
-						vector<double> r2)
+vector<double> collide(	vector<double> v1, vector<double> v2,
+					  	vector<double> r1, vector<double> r2)
 {	
-	vector<double> axis(3,0); // r2-r1
-	for (int i=0; i<3; i++) {axis[i] = r2[i]-r1[i];}
+	vector<double> r12(3,0); // r2-r1
+	for (int i=0; i<3; i++) {r12[i] = r2[i]-r1[i];}
 	
-	double lambda = dot(v0, axis)/dot(axis,axis); 
+	vector<double> v12(3,0); // v2-v1
+	for (int i=0; i<3; i++) {v12[i] = v2[i]-v1[i];}
 	
-	vector<double> v(3,0);
-	for (int i=0; i<3; i++) {v[i] = v0[i] - 2*lambda*axis[i];}
+	double lambda = dot(v12, r12)/dot(r12,r12); 
 	
-	return v;
+	vector<double> V1(3,0);
+	for (int i=0; i<3; i++) {V1[i] = v1[i] + lambda*r12[i];}
+	
+	return V1;
 }
 
 /*
@@ -123,8 +125,8 @@ void move(	vector<vector<double>> &r,
 			
 			if (d < 2)
 			{	
-				v[i] = collide(v[i],r[i],r2[j]);
-				v[j] = collide(v[j],r2[j],r[i]);
+				v[i] = collide(v[i],v[j],r[i],r2[j]);
+				v[j] = collide(v[j],v[i],r2[j],r[i]);
 			}
 		}
 	}
