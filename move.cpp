@@ -47,13 +47,6 @@ pairsIndDist pairList(vector<vector<double>> r,
 	vector<int> indicesPart2, indicesPart2Sorted;
 	vector<double> distances, distancesSorted;
 	
-	indicesPart1.reserve(N);
-	indicesPart2.reserve(N);
-	distances.reserve(N);
-	indicesPart1Sorted.reserve(N);
-	indicesPart2Sorted.reserve(N);
-	distancesSorted.reserve(N);
-	
 	/* 
 	 * On commence par créer une liste des particules pouvant collisionner 
 	 * avec une particule donnée de notre système. Étant donné la périodicité,
@@ -63,6 +56,9 @@ pairsIndDist pairList(vector<vector<double>> r,
 	 
 	vector<vector<double>> r2;
 	vector<vector<double>> copies;
+	
+	r2.reserve(N*27);
+	copies.reserve(27);
 	
 	copies.push_back({ 0, 0, 0}); //1
 	
@@ -109,7 +105,7 @@ pairsIndDist pairList(vector<vector<double>> r,
 	
 	/* 
 	 * On collecte maintenant les informations voulues pour chaque paire
-	 * de séparation d <= dMax.
+	 * de séparation d < dMax.
 	 */
 	
 	for (int i=0; i<N; i++)
@@ -118,9 +114,9 @@ pairsIndDist pairList(vector<vector<double>> r,
 		{
 			double d = sqrt( pow(r[i][0]-r2[j][0],2)
 							+pow(r[i][1]-r2[j][1],2)
-							+pow(r[i][2]-r2[j][2],2));				
+							+pow(r[i][2]-r2[j][2],2));
 			
-			if (d <= dMax) 
+			if (d < dMax) 
 			{	
 				indicesPart1.push_back(i);
 				indicesPart2.push_back(j%N); // modulo pour copie (0,0,0)

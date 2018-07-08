@@ -16,7 +16,7 @@ vector<vector<double>> placementR(vector<int> sizes, double a)
 	int my = sizes[1];
 	int mz = sizes[2];
  	vector<vector<double>> network(4*mx*my*mz,{0,0,0});
- 	vector<vector<double>> temp(mx*my*mz,{0,0,0}); // variable temporaire
+ 	vector<vector<int>> temp(mx*my*mz,{0,0,0}); // variable temporaire
  	 
  	int p = 0;
 	for (int i=0; i<mx; i++)
@@ -25,7 +25,7 @@ vector<vector<double>> placementR(vector<int> sizes, double a)
 		{
 			for (int k=0; k<mz; k++)
 			{
-				temp[p] = {i*a,j*a,k*a};
+				temp[p] = {i,j,k};
 				p = p+1;
 			}
 	 	}
@@ -38,7 +38,7 @@ vector<vector<double>> placementR(vector<int> sizes, double a)
 		{
 			for (int m=0; m<network[0].size(); m++) // addition de vecteurs
 			{
-				network[s][m] = base[q][m] + temp[l][m];	
+				network[s][m] = a* (base[q][m] + temp[l][m]);	
 			}
 			s = s+1;
 		}
@@ -47,8 +47,17 @@ vector<vector<double>> placementR(vector<int> sizes, double a)
 	return network;
 }
 
-
-
+vector<vector<double>> placementV(int N, double T)
+{
+	double v0 = sqrt(3*T); // <v^2> = 3kT/m
+	
+	vector<vector<double>> v(N,{-v0,0,0});
+	
+	v[0] = {0,v0,0}; 
+	for (int i=1; i<N/2; i++) {v[i] = {v0,0,0};}
+	
+	return v;
+}
 
 
 

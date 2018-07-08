@@ -62,7 +62,6 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 		cout << "t = " << t+dt << endl;
 		pairsIndDist pairs = pairList(r,boxDimensions,dMax);
 		move(r,v,boxDimensions,pairs,dt,t);
-		pairDensity(pairs,dMax,dr);
 		printParticles(r,v);
 		t = t+dt;
 	}
