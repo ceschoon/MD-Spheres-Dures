@@ -24,6 +24,7 @@
 #include "placement.hpp"
 #include "move.hpp"
 #include "observables.hpp"
+#include "utilities.hpp"
 #include <vector>
 #include <iostream>
 #include <math.h>
@@ -33,14 +34,15 @@ using std::cout;
 using std::endl;
 using std::vector;
 
+
 int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 {
 	/* Déclaration des paramètres par défaut */
 	
 	// paramètres physiques
 	int mx = 2; // mx*my*mz = nombre de mailles cubiques FCC à simuler
-	int my = 1; // 4*mx*my*mz = nombre de particules
-	int mz = 1;
+	int my = 2; // 4*mx*my*mz = nombre de particules
+	int mz = 2;
 	double n = 0.01; // densité max = 1/32/sqrt(2) approx 0.022
 	double T = 1; // température
 	
@@ -79,12 +81,13 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	double corrLength = 
 		*std::min_element(boxDimensions.begin(),boxDimensions.end());
 	
-	double dMax = corrLength * 0.9; // dist max pour lister les paires
+	double dMax = a * 0.9; // dist max pour lister les paires // corrLength*.9
 	
 	/* Simulation jusqu'à l'équilibre */
 	
 	int nt = int(tEq/dt);
-	
+
+/*
 	for (int i=0; i<nt; i++)
 	{
 		cout << "t = " << t+dt << endl;
@@ -93,13 +96,29 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 		move(r,v,boxDimensions,pairs,dt,t);
 		pairDensity(pairs,dMax,dr);
 		
-		//TODO: 2x même paire 17 0 et 0 17
 		//TODO: pq v = 0 0 0
 		//TODO: pq se rentre dedans ? <-> jigling: si repart pas avec la
 		//		même vitesse, reste dans l'autre
 		
 		t = t+dt;
 	}
+*/
+	
+	pairsIndDist pairs = pairList(r,boxDimensions,dMax);
+	pairDensity(pairs,dMax,dr);
+	
+/*
+	vector<int> indices1 = pairs.indicesPart1;
+	vector<int> indices2 = pairs.indicesPart1;
+	vector<double> dists = pairs.distances;
+	cout << "a = " << a << endl;
+	cout << "indices1: " << endl;
+	printVector(indices1);
+	cout << "indices2: " << endl;
+	printVector(indices2);
+	cout << "dists: " << endl;
+	printVector(dists);
+*/
 	
 	/* Simulation à l'équilibre */
 	

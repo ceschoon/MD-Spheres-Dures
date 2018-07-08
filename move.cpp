@@ -1,4 +1,5 @@
 #include "move.hpp"
+#include "utilities.hpp"
 #include <math.h>
 #include <algorithm>
 #include <numeric>
@@ -17,7 +18,8 @@ using std::endl;
  */
  
 template <typename T>
-vector<size_t> sort_indexes(const vector<T> &v) {
+vector<size_t> sort_indexes(const vector<T> &v) 
+{
 
   // initialize original index locations
   vector<size_t> idx(v.size());
@@ -39,13 +41,13 @@ pairsIndDist pairList(vector<vector<double>> r,
 					  double dMax)
 {	
 	int N = r.size();
-	int lx = boxDimensions[0];
-	int ly = boxDimensions[1];
-	int lz = boxDimensions[2];
+	double lx = boxDimensions[0];
+	double ly = boxDimensions[1];
+	double lz = boxDimensions[2];
 	
-	vector<int> indicesPart1, indicesPart1Sorted;
-	vector<int> indicesPart2, indicesPart2Sorted;
-	vector<double> distances, distancesSorted;
+	vector<int> indicesPart1, indicesPart1Unique, indicesPart1Sorted;
+	vector<int> indicesPart2, indicesPart2Unique, indicesPart2Sorted;
+	vector<double> distances, distancesUnique, distancesSorted;
 	
 	/* 
 	 * On commence par créer une liste des particules pouvant collisionner 
@@ -118,6 +120,7 @@ pairsIndDist pairList(vector<vector<double>> r,
 			
 			if (d < dMax) 
 			{	
+				
 				indicesPart1.push_back(i);
 				indicesPart2.push_back(j%N); // modulo pour copie (0,0,0)
 				distances.push_back(d);
@@ -125,19 +128,60 @@ pairsIndDist pairList(vector<vector<double>> r,
 		}
 	}
 	
-	/* Tri des paires selon la distance */
+	/* Retire les paires comptées plusieurs fois */
 	
-	for (auto i: sort_indexes(distances)) 
+	int M = indicesPart1.size(); // nombre de paires
+	vector<int> idx; // indices des paires en trop
+	
+	for (int i=0; i<M; i++)
 	{
-		indicesPart1Sorted.push_back(indicesPart1[i]);
-		indicesPart2Sorted.push_back(indicesPart2[i]);
-		distancesSorted.push_back(distances[i]);
+		vector<int> originalPair = {indicesPart1[i], indicesPart2[i]};
+		
+		for (int j=0; j<i; j++)
+		{
+			vector<int> testedPair = {indicesPart1[j], indicesPart2[j]};
+			
+			// on retire la paire testée si elle est équivalente à l'originale
+			if ((testedPair[0]==originalPair[0]) &&
+				(testedPair[1]==originalPair[1]))
+			{
+				idx.push_back(i);
+				break;
+			}
+			else if ((testedPair[0]==originalPair[1]) &&
+					 (testedPair[1]==originalPair[0]))
+			{
+				idx.push_back(i);
+				break;
+			}
+			else {;}
+		}
+	}	
+	
+	/*
+	 * Ajoute la paire aux listes indicesPart*, distances si elle n'est pas dans
+	 * la liste "idx" des paires excédentaires.
+	 */
+	 
+	for (int i=0; i<M; i++)
+	{
+		if (std::find(idx.begin(), idx.end(), i) == idx.end()) // i n'est pas 
+		 													   // dans idx
+		{
+			indicesPart1Unique.push_back(indicesPart1[i]);
+			indicesPart2Unique.push_back(indicesPart2[i]);
+			distancesUnique.push_back(distances[i]);
+		}
 	}
 	
-	/*pairsIndDist pairs;
-	pairs.indiciesPart1 = indiciesPart1;
-	pairs.indiciesPart2 = indiciesPart2;
-	pairs.distances = distances;*/
+	/* Tri des paires selon la distance */
+	
+	for (auto i: sort_indexes(distancesUnique)) 
+	{
+		indicesPart1Sorted.push_back(indicesPart1Unique[i]);
+		indicesPart2Sorted.push_back(indicesPart2Unique[i]);
+		distancesSorted.push_back(distances[i]);
+	}
 	
 	return {indicesPart1Sorted, indicesPart2Sorted, distancesSorted};
 }
