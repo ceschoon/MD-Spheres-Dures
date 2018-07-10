@@ -28,6 +28,9 @@ struct pairsIndDist
 {
 	vector<int> indicesPart1; // indice de la particule #1 de la paire
 	vector<int> indicesPart2;
+	vector<int> indicesCopyPart2; // indice de la copie du système dans
+								  // laquelle se trouve la particule #2
+								  // qui collisionne avec la particule #1.
 	vector<double> distances; // distance séparant les deux particules
 };
  

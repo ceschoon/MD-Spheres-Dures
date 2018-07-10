@@ -11,7 +11,7 @@ void pairDensity(pairsIndDist pairs,
 {
 	/* Comptage des paires dans [r,r+dr[ */
 	
-	int nBins = int(dMax/dr);
+	int nBins = int(dMax/dr)+1;
 	vector<int> n(nBins);
 	
 	vector<double> distances = pairs.distances;

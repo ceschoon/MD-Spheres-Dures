@@ -10,6 +10,54 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+
+/******************************************************************************/
+
+/*
+ * Liste des copies voisines du système
+ */
+
+vector<vector<double>> getCopies()
+{
+	vector<vector<double>> copies;
+	copies.reserve(27);
+
+	copies.push_back({ 0, 0, 0}); //1
+
+	copies.push_back({ 1, 0, 0}); // copie du système décalée de 1 selon x
+	copies.push_back({ 0, 1, 0});
+	copies.push_back({ 0, 0, 1});
+	copies.push_back({-1, 0, 0});
+	copies.push_back({ 0,-1, 0});
+	copies.push_back({ 0, 0,-1}); //6
+
+	copies.push_back({ 0, 1, 1});
+	copies.push_back({ 1, 0, 1});
+	copies.push_back({ 1, 1, 0});
+	copies.push_back({ 0, 1,-1});
+	copies.push_back({-1, 0, 1});
+	copies.push_back({ 1,-1, 0});
+	copies.push_back({ 0,-1, 1});
+	copies.push_back({ 1, 0,-1});
+	copies.push_back({-1, 1, 0});
+	copies.push_back({ 0,-1,-1});
+	copies.push_back({-1, 0,-1});
+	copies.push_back({-1,-1, 0}); //12
+
+	copies.push_back({ 1, 1, 1});
+	copies.push_back({-1, 1, 1});
+	copies.push_back({ 1,-1, 1});
+	copies.push_back({ 1, 1,-1});
+	copies.push_back({ 1,-1,-1});
+	copies.push_back({-1, 1,-1});
+	copies.push_back({-1,-1, 1});
+	copies.push_back({-1,-1,-1}); //8
+
+	//------------------------------27 = 1+6+12+8 = 3^3 ok
+	
+	return copies;
+}
+
 /******************************************************************************/
 
 /* 
@@ -47,6 +95,8 @@ pairsIndDist pairList(vector<vector<double>> r,
 	
 	vector<int> indicesPart1, indicesPart1Unique, indicesPart1Sorted;
 	vector<int> indicesPart2, indicesPart2Unique, indicesPart2Sorted;
+	vector<int> indicesCopyPart2, indicesCopyPart2Unique,
+				indicesCopyPart2Sorted;
 	vector<double> distances, distancesUnique, distancesSorted;
 	
 	/* 
@@ -55,45 +105,11 @@ pairsIndDist pairList(vector<vector<double>> r,
 	 * une particules peut entrer en collision avec n'importe quelle 
 	 * particule se trouvant dans une des 27 copies voisines de notre système.
 	 */	
-	 
+	
+	vector<vector<double>> copies = getCopies();
+	
 	vector<vector<double>> r2;
-	vector<vector<double>> copies;
-	
 	r2.reserve(N*27);
-	copies.reserve(27);
-	
-	copies.push_back({ 0, 0, 0}); //1
-	
-	copies.push_back({ 1, 0, 0}); // copie du système décalée de 1 selon x
-	copies.push_back({ 0, 1, 0});
-	copies.push_back({ 0, 0, 1});
-	copies.push_back({-1, 0, 0});
-	copies.push_back({ 0,-1, 0});
-	copies.push_back({ 0, 0,-1}); //6
-	
-	copies.push_back({ 0, 1, 1});
-	copies.push_back({ 1, 0, 1});
-	copies.push_back({ 1, 1, 0});
-	copies.push_back({ 0, 1,-1});
-	copies.push_back({-1, 0, 1});
-	copies.push_back({ 1,-1, 0});
-	copies.push_back({ 0,-1, 1});
-	copies.push_back({ 1, 0,-1});
-	copies.push_back({-1, 1, 0});
-	copies.push_back({ 0,-1,-1});
-	copies.push_back({-1, 0,-1});
-	copies.push_back({-1,-1, 0}); //12
-	
-	copies.push_back({ 1, 1, 1});
-	copies.push_back({-1, 1, 1});
-	copies.push_back({ 1,-1, 1});
-	copies.push_back({ 1, 1,-1});
-	copies.push_back({ 1,-1,-1});
-	copies.push_back({-1, 1,-1});
-	copies.push_back({-1,-1, 1});
-	copies.push_back({-1,-1,-1}); //8
-	
-	//------------------------------27 = 1+6+12+8 = 3^3 ok
 	
 	for (int i=0; i<27; i++)
 	{
@@ -120,47 +136,53 @@ pairsIndDist pairList(vector<vector<double>> r,
 			
 			if (d < dMax) 
 			{	
-				
 				indicesPart1.push_back(i);
-				indicesPart2.push_back(j%N); // modulo pour copie (0,0,0)
+				indicesPart2.push_back(j%N); // % pour indice ds copie (0,0,0)
+				indicesCopyPart2.push_back(j/N); // / pour indice de la copie
 				distances.push_back(d);
 			}
 		}
 	}
 	
+	/* Tri des paires selon la distance */
+	
+	for (auto i: sort_indexes(distances)) 
+	{
+		indicesPart1Sorted.push_back(indicesPart1[i]);
+		indicesPart2Sorted.push_back(indicesPart2[i]);
+		indicesCopyPart2Sorted.push_back(indicesCopyPart2[i]);
+		distancesSorted.push_back(distances[i]);
+	}
+	
 	/* Retire les paires comptées plusieurs fois */
 	
-	int M = indicesPart1.size(); // nombre de paires
+	int M = indicesPart1Sorted.size(); // nombre de paires
 	vector<int> idx; // indices des paires en trop
 	
 	for (int i=0; i<M; i++)
 	{
-		vector<int> originalPair = {indicesPart1[i], indicesPart2[i]};
-		
 		for (int j=0; j<i; j++)
-		{
-			vector<int> testedPair = {indicesPart1[j], indicesPart2[j]};
-			
-			// on retire la paire testée si elle est équivalente à l'originale
-			if ((testedPair[0]==originalPair[0]) &&
-				(testedPair[1]==originalPair[1]))
+		{	
+			// on retire la paire i si elle est équivalente à la paire j
+			if ((indicesPart1Sorted[j]==indicesPart1Sorted[i]) &&
+				(indicesPart2Sorted[j]==indicesPart2Sorted[i]))
 			{
 				idx.push_back(i);
 				break;
 			}
-			else if ((testedPair[0]==originalPair[1]) &&
-					 (testedPair[1]==originalPair[0]))
+			else if ((indicesPart1Sorted[j]==indicesPart2Sorted[i]) &&
+					 (indicesPart2Sorted[j]==indicesPart1Sorted[i]))
 			{
 				idx.push_back(i);
 				break;
 			}
 			else {;}
 		}
-	}	
+	}
 	
 	/*
-	 * Ajoute la paire aux listes indicesPart*, distances si elle n'est pas dans
-	 * la liste "idx" des paires excédentaires.
+	 * Ajoute la paire aux listes indicesPart*Unique, distancesUnique si 
+	 * elle n'est pas dans la liste "idx" des paires excédentaires.
 	 */
 	 
 	for (int i=0; i<M; i++)
@@ -168,28 +190,22 @@ pairsIndDist pairList(vector<vector<double>> r,
 		if (std::find(idx.begin(), idx.end(), i) == idx.end()) // i n'est pas 
 		 													   // dans idx
 		{
-			indicesPart1Unique.push_back(indicesPart1[i]);
-			indicesPart2Unique.push_back(indicesPart2[i]);
-			distancesUnique.push_back(distances[i]);
+			indicesPart1Unique.push_back(indicesPart1Sorted[i]);
+			indicesPart2Unique.push_back(indicesPart2Sorted[i]);
+			indicesCopyPart2Unique.push_back(indicesCopyPart2Sorted[i]);
+			distancesUnique.push_back(distancesSorted[i]);
 		}
 	}
 	
-	/* Tri des paires selon la distance */
-	
-	for (auto i: sort_indexes(distancesUnique)) 
-	{
-		indicesPart1Sorted.push_back(indicesPart1Unique[i]);
-		indicesPart2Sorted.push_back(indicesPart2Unique[i]);
-		distancesSorted.push_back(distances[i]);
-	}
-	
-	return {indicesPart1Sorted, indicesPart2Sorted, distancesSorted};
+	return {indicesPart1Unique, indicesPart2Unique, indicesCopyPart2Unique, 
+			distancesUnique};
 }
 
 /******************************************************************************/
 
 /* Implémentation de la routine "collide", nécessaire à la routine "move" */
 
+// implémentation nécessaire du produit scalaire
 double dot(vector<double> x, vector<double> y)
 {
 	return x[0]*y[0]+x[1]*y[1]+x[2]*y[2];
@@ -206,7 +222,7 @@ double dot(vector<double> x, vector<double> y)
 void collide(vector<double> &v1, vector<double> &v2,
 			 vector<double> &r1, vector<double> &r2,
 			 double t) // pour dater l'enregistrement de vij.rij
-{	
+{		
 	/* Calcul des nouvelles vitesses */
 	
 	vector<double> r12(3); // r2-r1
@@ -262,16 +278,33 @@ void move(	vector<vector<double>> &r,
 	 * n'est pas respecté.
 	 */ 
 	
+	vector<vector<double>> copies = getCopies();
+	
 	for (int i=0; i<pairs.distances.size(); i++)
 	{
 		double d = pairs.distances[i];
 		
 		if (d < 2) // chevauchement => collision
-		{
+		{	
 			int i1 = pairs.indicesPart1[i];
-			int i2 = pairs.indicesPart2[i]; 
+			int i2 = pairs.indicesPart2[i];
+			int idxCopy = pairs.indicesCopyPart2[i];
 			
-			collide(v[i1],v[i2],r[i1],r[i2],t);
+			/*
+			 * Remarque: Une particule entrera généralement en collision avec
+			 * une copie d'une autre particule, il faut donc donner à la 
+			 * routine "collide" les coordonnées de la bonne copie de i2.
+			 * L'indice de la copie de i2 la plus proche de i1 est stockée
+			 * dans "pairs.indicesCopyPart2".
+			 */
+			
+			vector<double> r2(3); // position de la copie de la particule #2
+			
+			r2[0] = r[i2][0] + copies[idxCopy][0]*boxDimensions[0];
+			r2[1] = r[i2][1] + copies[idxCopy][1]*boxDimensions[1];
+			r2[2] = r[i2][2] + copies[idxCopy][2]*boxDimensions[2];
+			
+			collide(v[i1],v[i2],r[i1],r2,t);
 		}
 		else {break;}
 	}
@@ -286,8 +319,9 @@ void move(	vector<vector<double>> &r,
 			
 			if (r[i][j] < 0) 
 				{r[i][j] = r[i][j] + boxDimensions[j];}
-			if (r[i][j] >= boxDimensions[j]) 
+			else if (r[i][j] >= boxDimensions[j]) 
 				{r[i][j] = r[i][j] - boxDimensions[j];}
+			else {;}
 		}
 	}
 }

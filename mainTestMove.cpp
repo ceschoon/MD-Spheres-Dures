@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 {	
 	/* Déclaration des paramètres par défaut */
 	
-	double tMax = 1;
+	double tMax = 1.6;
 	double dt = 0.05;
 	double dMax = 3.5;
 	double dr = 0.1;
@@ -54,8 +54,8 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	vector<vector<double>> v;
 	vector<double> boxDimensions = {7,7,7};
 	
-	r.push_back({0,0,0}); v.push_back({1,0,0});
-	r.push_back({3,0,0}); v.push_back({-1,0,0});
+	r.push_back({0,0,0}); v.push_back({0,1,0});
+	r.push_back({3,3,0}); v.push_back({-1,0,0});
 	
 	for (int i=0; i<nt; i++)
 	{
