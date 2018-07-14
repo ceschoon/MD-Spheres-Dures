@@ -15,8 +15,16 @@
 #include <vector>
 
 using std::vector;
+/* 
+ * 
+ *
+ */
 
 vector<vector<double>> placementR(vector<int> sizes, double a);
+
+
+
+
 vector<vector<double>> placementV(int N, double T);
 
 #endif // PLACEMENT_HPP 
