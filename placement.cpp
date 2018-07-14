@@ -1,16 +1,44 @@
 #include "placement.hpp"
 #include <math.h>
 #include <iostream>
+#include <cstdlib>
+#include <limits>
+
 
 using std::vector;
 using std::cout;
 using std::endl;
 
+double boxMuller(double mu, double sigma) // Wikipédia
+{
+	static const double epsilon = std::numeric_limits<double>::min();
+	static const double two_pi = 2.0*3.14159265358979323846;
+
+	thread_local double z1;
+	thread_local bool generate;
+	generate = !generate;
+
+	if (!generate)
+	   return z1 * sigma + mu;
+
+	double u1, u2;
+	do
+	 {
+	   u1 = rand() * (1.0 / RAND_MAX);
+	   u2 = rand() * (1.0 / RAND_MAX);
+	 }
+	while ( u1 <= epsilon );
+
+	double z0;
+	z0 = sqrt(-2.0 * log(u1)) * cos(two_pi * u2);
+	z1 = sqrt(-2.0 * log(u1)) * sin(two_pi * u2);
+	return z0 * sigma + mu;
+}
 
 vector<vector<double>> placementR(vector<int> sizes, double a) 
 { 
-	vector<vector<double>> base = {{0,0,0},{1.0/2,1.0/2,0},{1/2.0,0,1/2.0},
-									{0,1.0/2,1/2.0}};
+	vector<vector<double>> base = {{0,0,0},{a/2,a/2,0},{a/2.0,0,a/2.0},
+									{0,a/2,a/2.0}};
 	int mx = sizes[0];
 	int my = sizes[1];
 	int mz = sizes[2];
@@ -46,44 +74,32 @@ vector<vector<double>> placementR(vector<int> sizes, double a)
 	return network;
 }
 
-vector<vector<double>> placementV(int N, double T)
+vector<vector<double>> placementV(int N, double T) // <v^2> = 3kT/m
 {
-	double v0 = sqrt(3*T); // <v^2> = 3kT/m
+	vector<vector<double>> v(N,{0,0,0});
+	double mu = 0;
+	double sigma = sqrt(T);
 	
-	vector<vector<double>> v(N,{-v0,0,0});
+	for (int n=0; n<N; n++)
+	{
+		v[n][0] = boxMuller(mu,sigma);
+		v[n][1] = boxMuller(mu,sigma);
+		v[n][2] = boxMuller(mu,sigma);		
+	}
 	
-	v[0] = {0,v0,0}; 
-	for (int i=1; i<N/2; i++) {v[i] = {v0,0,0};}
-	
+	vector<double> qm(3,0); // qté de mouvt totale avec masse = 1
+	for (int m=0; m<3; m++)
+	{
+		for (int n=0; n<N; n++)
+		{
+			qm[m] = qm[m] + v[n][m];
+		}
+		
+		for (int n=0; n<N; n++)
+		{
+			v[n][m] = v[n][m] - qm[m]/N;
+		}
+	}
+			
 	return v;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
