@@ -2,7 +2,7 @@
  *																		   *
  * 	Ce programme est une simulation d'un système de sphères dures.		   *
  *																		   *
- *	Utilisation: ./main mx my mz n T tEq tSim dt dMax dr				   *
+ *	Utilisation: ./main mx my mz n T tSim dt dMax dr					   *
  * 																		   *
  *	Auteurs du programme: Cédric Schoonen et Maxime Jamotte				   *
  *	Auteur de ce fichier: Cédric Schoonen								   *
@@ -15,13 +15,13 @@
   *		-	m = 1 la masse d'une particule
   *		-	R = 1 le rayon d'une particule
   *		-	k = 1 la constante de Boltzmann
-  *		-	dt ~ 10^-4 le pas de temps //TODO: être plus précis
+  *		-	dt ~ 10^-2 le pas de temps //TODO: être plus précis, comment
+  *				définir l'unité temporelle ?
   */
 
-//TODO: messages info sur le système
 //TODO: print du temps de corrélation => séparation en blocs plus tard (python)
-//TODO: trouver comment fixer tEq
-//TODO: ajuster le temps de simulation avec le temps de corrélation
+//TODO: trouver comment fixer tEq -> python
+//TODO: ajuster le temps de simulation avec le temps de corrélation -> python
 
 #include "placement.hpp"
 #include "move.hpp"
@@ -50,8 +50,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	double T = 1; // température
 	
 	// paramètres de simulation
-	double tEq = 10; // temps pour atteindre l'équilibre
-	double tSim = 1; // temps de simulation une fois à l'équilibre
+	double tSim = 10; // temps de simulation
 	double dt = 0.01; // pas de temps
 	double dMax = 0; // dist max pour lister les paires -- assigné plus loin
 	double dr = 0.1; // largeur de bin pour g(r)
@@ -60,28 +59,38 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	
 	double isdMaxFixedByUser = false;
 	
-	if (argc>10)
+	if (argc>9)
 	{
 		mx = atoi(argv[1]);
 		my = atoi(argv[2]);
 		mz = atoi(argv[3]);
 		n = atof(argv[4]);
 		T = atof(argv[5]);
-		tEq = atof(argv[6]);
-		tSim = atof(argv[7]);
-		dt = atof(argv[8]);
-		dMax = atof(argv[9]);
-		dr = atof(argv[10]);
+		tSim = atof(argv[6]);
+		dt = atof(argv[7]);
+		dMax = atof(argv[8]);
+		dr = atof(argv[9]);
 		
 		isdMaxFixedByUser = true;
 	}
 	
-	/* Nettoyage des fichiers utilisés pour la simulation */
+	/* Initialisation des fichiers utilisés pour la simulation */
 	
-	std::ofstream fileCollisionData("data/collisionData.dat");
+	std::ofstream fileCollisionData("data/collisionData.csv");
+	if (fileCollisionData)
+	{
+		fileCollisionData << "t,vDotr" << endl;
+	}
 	fileCollisionData.close();
-	std::ofstream filePairDensity("data/pairDensity.dat");
+	
+	std::ofstream filePairDensity("data/pairDensity.csv");
+	if (filePairDensity)
+	{
+		filePairDensity << "pairHistogram" << endl;
+	}
 	filePairDensity.close();
+	
+	// fichier "data/infoSimulation.dat" utilisé plus loin
 	
 	/* Initialisation de la simulation */
 	
@@ -106,41 +115,70 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	 * Le temps du calcul des paires grandi approx selon dMax^5
 	 */
 	
-	/* Simulation jusqu'à l'équilibre */
+	/* Réajustement des vitesse pour être à la bonne température */
 	
 	/*
-	cout << "a = " << a << endl;
-	cout << "r en t=0: " << endl;
-	printMatrix(r);
-	cout << "v en t=0: " << endl;
-	printMatrix(v);
-	*/
+	 * Les vitesses sont distribuées selon une gausienne à la bonne 
+	 * mais le nombre fini de particules fait que la température réelle
+	 * du système n'est pas celle de la distribution utilisée.
+	 * Le système est censé vérifier la relation :
+	 * 		
+	 *		1/2*m*N*<v^2> = 3/2*(N-1)*k*T 	(il y a 3*(N-1) degrés de liberté)
+	 *	
+	 * Ou de manière équivalente dans notre système d'unités:
+	 * 
+	 *		<v^2> = 3*T*(N-1)/N
+	 * 
+	 * Il faut donc multiplier les vitesses par
+	 * 
+	 * 		lambda = sqrt( 3*T*(N-1)/(N*<v^2>) )
+	 *
+	 * pour s'assurer que le système se trouve à la bonne température.
+	 */
 	
-	int nt = int(tEq/dt);
-
+	double avgV2 = velocityQuadMean(v);
+	double lambda = sqrt( 3*T*(N-1)/(N*avgV2) );
+	
+	for (int i=0; i<N; i++)
+	{
+		v[i][0] = v[i][0] * lambda;
+		v[i][1] = v[i][1] * lambda;
+		v[i][2] = v[i][2] * lambda;
+	}
+	
+	/* Enregistrement des caractéristiques du système */
+	
+	std::ofstream fileInfoSimulation("data/infoSimulation.csv");
+	if (fileInfoSimulation)
+	{
+		fileInfoSimulation << "mx,my,mz,n,T,tSim,dt,dMax,dr,N,a" 
+						   << endl;
+		fileInfoSimulation << mx << ", "
+						   << my << ", "
+						   << mz << ", "
+						   << n << ", "
+						   << T << ", "
+						   << tSim << ", "
+						   << dt << ", "
+						   << dMax << ", "
+						   << dr << ", "
+						   << N << ", "
+						   << a << ", "
+						   << endl;
+	}
+	fileInfoSimulation.close();
+	
+	/* Simulation */
+	
+	int nt = int(tSim/dt);
 
 	for (int i=0; i<nt; i++)
-	{
-		/*
-		cout << "-------------------------------------------------" << endl;
-		cout << "t = " << t+dt << endl;
-		*/
-		
+	{	
 		pairsIndDist pairs = pairList(r,boxDimensions,dMax);
 		move(r,v,boxDimensions,pairs,dt,t);
 		pairDensity(pairs,dMax,dr);
-		
-		/*
-		cout << "r: " << endl;
-		printMatrix(r);
-		cout << "v: " << endl;
-		printMatrix(v);
-		*/
-		
 		t = t+dt;
 	}
-	
-	/* Simulation à l'équilibre */
 	
 	return 0;
 }

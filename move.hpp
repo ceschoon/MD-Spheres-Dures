@@ -45,7 +45,7 @@ pairsIndDist pairList(vector<vector<double>> r,
  * 
  * Cette routine enregistre également les grandeurs suivantes: 
  * 	-	Le produit vij.rij pour chaque collision. Cette 
- * 		variable est écrite dans le fichier "data/collisionData.dat"
+ * 		variable est écrite dans le fichier "data/collisionData.csv"
  */ 
  
 void move(	vector<vector<double>> &r,

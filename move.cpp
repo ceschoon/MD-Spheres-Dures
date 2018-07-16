@@ -239,12 +239,12 @@ void collide(vector<double> &v1, vector<double> &v2,
 	
 	/* Enregistre vij.rij pour le calcul de la pression */
 	
-	std::ofstream file("data/collisionData.dat", std::ios_base::app);
+	std::ofstream file("data/collisionData.csv", std::ios_base::app);
 	if (file)
 	{
-		file << t << ", " << vDotr << endl;
+		file << t << ", " << abs(vDotr) << endl;
 	}
-	else { cout << "Unable to open file \"data/collisionData.dat\"" << endl;}
+	else { cout << "Unable to open file \"data/collisionData.csv\"" << endl;}
 	
 	file.close();
 }

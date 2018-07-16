@@ -20,11 +20,17 @@ using std::vector;
  * particules séparées d'une distance comprise dans l'intervalle [r,r+dr[.
  * 
  * Cette routine enregistre l'histogramme de la distribution n(r) dans le 
- * fichier "data/pairDensity.dat".
+ * fichier "data/pairDensity.csv".
  */ 
  
 void pairDensity(pairsIndDist pairs, 
 				 double dMax, // distance max où évaluer n(r)
 				 double dr);
+
+/*
+ * La fonction "velocityQuadMean" calcule la vitesse quadratique moyenne <v^2>.
+ */
+
+double velocityQuadMean(vector<vector<double>> v);
 
 #endif // OBSERVABLES_HPP
