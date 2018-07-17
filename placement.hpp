@@ -13,18 +13,14 @@
 #define PLACEMENT_HPP
 
 #include <vector>
+#include <random>
 
 using std::vector;
-/* 
- * 
- *
- */
+
 
 vector<vector<double>> placementR(vector<int> sizes, double a);
 
-
-
-
-vector<vector<double>> placementV(int N, double T);
+vector<vector<double>> placementV(int N, double T, 
+	std::default_random_engine &eng);
 
 #endif // PLACEMENT_HPP 

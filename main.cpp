@@ -2,7 +2,7 @@
  *																		   *
  * 	Ce programme est une simulation d'un système de sphères dures.		   *
  *																		   *
- *	Utilisation: ./main mx my mz n T tSim dt dMax dr					   *
+ *	Utilisation: ./main mx my mz n T tSim dt dMax dr seed				   *
  * 																		   *
  *	Auteurs du programme: Cédric Schoonen et Maxime Jamotte				   *
  *	Auteur de ce fichier: Cédric Schoonen								   *
@@ -54,12 +54,14 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	double dt = 0.01; // pas de temps
 	double dMax = 0; // dist max pour lister les paires -- assigné plus loin
 	double dr = 0.1; // largeur de bin pour g(r)
+	int seed = 0; // graine pour la génération de nombres aléatoires
+				  // seed = 0 est remplacé avec un vrai nombre aléatoire
 	
 	/* Récupération des paramètres donnés en argument */
 	
 	double isdMaxFixedByUser = false;
 	
-	if (argc>9)
+	if (argc>10)
 	{
 		mx = atoi(argv[1]);
 		my = atoi(argv[2]);
@@ -70,6 +72,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 		dt = atof(argv[7]);
 		dMax = atof(argv[8]);
 		dr = atof(argv[9]);
+		seed = atoi(argv[10]);
 		
 		isdMaxFixedByUser = true;
 	}
@@ -94,11 +97,18 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	
 	/* Initialisation de la simulation */
 	
+	if (seed == 0) 
+	{
+		std::random_device r;
+		seed = r();
+	}
+	std::default_random_engine eng(seed);
+	
 	int N = 4*mx*my*mz; // nombre de particules
 	double a = pow(4/n, 1/3.0);
 	
 	vector<vector<double>> r = placementR({mx,my,mz}, a);
-	vector<vector<double>> v = placementV(N, T);
+	vector<vector<double>> v = placementV(N, T, eng);
 	
 	vector<double> boxDimensions = {a*mx, a*my, a*mz};
 	
