@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	std::ofstream fileInfoSimulation("data/infoSimulation.csv");
 	if (fileInfoSimulation)
 	{
-		fileInfoSimulation << "mx,my,mz,n,T,tSim,dt,dMax,dr,N,a" 
+		fileInfoSimulation << "mx,my,mz,n,T,tSim,dt,dMax,dr,seed,N,a" 
 						   << endl;
 		fileInfoSimulation << mx << ", "
 						   << my << ", "
@@ -177,10 +177,9 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 						   << dt << ", "
 						   << dMax << ", "
 						   << dr << ", "
-						   << N << ", "
-						   << a << ", "
 						   << seed << ", "
-						   << endl;
+						   << N << ", "
+						   << a << endl;
 	}
 	fileInfoSimulation.close();
 	
