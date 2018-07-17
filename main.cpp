@@ -3,6 +3,16 @@
  * 	Ce programme est une simulation d'un système de sphères dures.		   *
  *																		   *
  *	Utilisation: ./main mx my mz n T tSim dt dMax dr seed				   *
+ *																		   *
+ *		mx*my*mz 	nombre de mailles cubiques FCC à simuler			   *
+ * 		n 			densité (densité max = 1/32/sqrt(2) approx 0.022)	   *
+ *		T 	 		température											   *
+ * 		tSim  		temps de simulation									   *
+ *		dt 			pas de temps										   *
+ *		dMax 		dist max pour lister les paires						   *
+ *		dr 			largeur des bins pour g(r)							   *
+ *		seed 		graine pour la génération de nombres aléatoires		   *
+ *					seed = 0 est remplacé par un vrai nombre aléatoire	   *
  * 																		   *
  *	Auteurs du programme: Cédric Schoonen et Maxime Jamotte				   *
  *	Auteur de ce fichier: Cédric Schoonen								   *
@@ -18,10 +28,6 @@
   *		-	dt ~ 10^-2 le pas de temps //TODO: être plus précis, comment
   *				définir l'unité temporelle ?
   */
-
-//TODO: print du temps de corrélation => séparation en blocs plus tard (python)
-//TODO: trouver comment fixer tEq -> python
-//TODO: ajuster le temps de simulation avec le temps de corrélation -> python
 
 #include "placement.hpp"
 #include "move.hpp"
@@ -43,19 +49,18 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	/* Déclaration des paramètres par défaut */
 	
 	// paramètres physiques
-	int mx = 3; // mx*my*mz = nombre de mailles cubiques FCC à simuler
-	int my = 3; // 4*mx*my*mz = nombre de particules
+	int mx = 3; 
+	int my = 3; 
 	int mz = 3;
-	double n = 0.01; // densité max = 1/32/sqrt(2) approx 0.022
-	double T = 1; // température
+	double n = 0.01; 
+	double T = 1; 
 	
 	// paramètres de simulation
-	double tSim = 10; // temps de simulation
-	double dt = 0.01; // pas de temps
-	double dMax = 0; // dist max pour lister les paires -- assigné plus loin
-	double dr = 0.1; // largeur de bin pour g(r)
-	int seed = 0; // graine pour la génération de nombres aléatoires
-				  // seed = 0 est remplacé avec un vrai nombre aléatoire
+	double tSim = 10; 
+	double dt = 0.01; 
+	double dMax = 0; // assigné plus loin
+	double dr = 0.1; 
+	int seed = 0;
 	
 	/* Récupération des paramètres donnés en argument */
 	
@@ -174,6 +179,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 						   << dr << ", "
 						   << N << ", "
 						   << a << ", "
+						   << seed << ", "
 						   << endl;
 	}
 	fileInfoSimulation.close();
