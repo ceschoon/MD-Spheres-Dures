@@ -10,8 +10,9 @@ using std::endl;
 
 vector<vector<double>> placementR(vector<int> sizes, double a) 
 { 
-	vector<vector<double>> base = {{0,0,0},{a/2,a/2,0},{a/2.0,0,a/2.0},
-									{0,a/2,a/2.0}};
+	vector<vector<double>> base = {{0,0,0},{1.0/2,1.0/2,0},{1.0/2,0,1.0/2},
+								   {0,1.0/2,1.0/2}};
+	
 	int mx = sizes[0];
 	int my = sizes[1];
 	int mz = sizes[2];
@@ -36,9 +37,16 @@ vector<vector<double>> placementR(vector<int> sizes, double a)
 	{	
 		for (int q=0; q<base.size(); q++) // transla. de chaque élém. de la base
 		{
-			for (int m=0; m<network[0].size(); m++) // addition de vecteurs
+			for (int m=0; m<3; m++) // addition de vecteurs
 			{
-				network[s][m] = a* (base[q][m] + temp[l][m]);	
+				network[s][m] = a*(base[q][m] + temp[l][m] + 0.01);
+				
+				/*
+				 * Rq: On ajoute un petit décalage de 0.01 pour que des 
+				 * particules ne soient pas pile sur les bords de la boîte.
+				 * Cela poserait problème pour la détection de sorties de la 
+				 * boîte lors de l'implémentation de la périodicité.
+				 */	
 			}
 			s = s+1;
 		}

@@ -12,47 +12,108 @@
 #define MOVE_HPP
 
 #include <vector>
+#include <map>
 
 using std::vector;
+using std::map;
 
 /*
- * La fonction "pairList" renvoie une structure contenant des informations
- * (distance, indices des particules) sur chaque paire de particules de la
- * liste "r" séparées d'une distance d'au plus "dMax".
- * 
- * Les listes de la structure "pairsIndDist" sont triées selon la distance
- * entre les particules, par ordre croissant.
+ * La routine "move" déplace toutes les particules de "t" dans le temps.
+ */
+
+void move(vector<vector<double>> &r,
+		  vector<vector<double>> v,
+		  double t);
+
+/*
+ * La routine "updateCollisions" met à jour les temps de collisions impliquant 
+ * les particules d'indices compris dans la liste "indices". Ces temps sont 
+ * listées dans la map "collisionTimes" reliant une paire de particules de la 
+ * liste "r" à l'instant de collision entre ces deux-ci. Si la paire n'est pas
+ * encore listée, celle-ci se verra ajoutée à la liste.
+ * Cette routine met aussi à jour la copie de la particule 2 qui est la cible 
+ * de collision. Cela est enregistré dans la map "collisionTarget", qui associe 
+ * à chaque paire un vecteur {i,j,copyj} de 3 composantes contenant les indices
+ * de la particule "i" incidente, de la particule cible "j" et de la copie
+ * "copyj" de la particule "j" qui collisionne avec "i". 
  */
  
-struct pairsIndDist
-{
-	vector<int> indicesPart1; // indice de la particule #1 de la paire
-	vector<int> indicesPart2;
-	vector<int> indicesCopyPart2; // indice de la copie du système dans
-								  // laquelle se trouve la particule #2
-								  // qui collisionne avec la particule #1.
-	vector<double> distances; // distance séparant les deux particules
-};
- 
-pairsIndDist pairList(vector<vector<double>> r,
-					  vector<double> boxDimensions,
-					  double dMax);
+void updateCollisions(map<vector<int>,double,bool(*)(vector<int>,vector<int>)> 
+						&collisionTimes,
+					  map<vector<int>,vector<int>,bool(*)(vector<int>,
+					  	vector<int>)> &collisionTarget,
+				 	  vector<vector<double>> r,
+				 	  vector<vector<double>> v, 
+				 	  vector<int> indices,
+				 	  vector<double> boxDimensions,
+				 	  double tNow);
 
 /*
- * La routine "move" avance le système de particules de "dt" dans le temps
- * en recalculant d'abord les vitesses si il y a collision entre les 
- * particules (chevauchement). 
- * 
- * Cette routine enregistre également les grandeurs suivantes: 
- * 	-	Le produit vij.rij pour chaque collision. Cette 
- * 		variable est écrite dans le fichier "data/collisionData.csv"
- */ 
- 
-void move(	vector<vector<double>> &r,
-			vector<vector<double>> &v,
-			vector<double> boxDimensions,
-			pairsIndDist pairs,
-			double dt,
-			double t); // temps avant +dt
+ * La routine "nextCollision" recherche la prochaine collision parmi celles
+ * listées dans "collisionTimes". 
+ */
+
+void nextCollision(map<vector<int>,double,bool(*)(vector<int>,vector<int>)> 
+						collisionTimes,
+				   map<vector<int>,vector<int>,bool(*)(vector<int>,
+					  	vector<int>)> collisionTarget,
+				   int N, 			// nombre de particules dans le système
+				   double &tColl, 	// output, instant de la prochaine collision
+				   int &i1, 		// output, indice particule #1 
+				   int &i2, 		// output, indice particule #2
+				   int &iCopy2,		// output, indice de la copie de la part #2
+				   double tNow);
+				 
+/*
+ * La routine "collide" réalise la collision entre deux particules 
+ * Cette routine met à jour les positions et vitesses des deux particules.
+ * Elle enregistre également le paramètre r12.v12 de la collision dans le 
+ * fichier "data/collisionData.csv"
+ */
+
+void collide(vector<double> r1, // position de la particule #1 au présent
+			 vector<double> &v1,
+			 vector<double> r2,
+			 vector<double> &v2,
+			 vector<double> boxDimensions,
+			 int iCopy2, 
+			 double tNow); // pour dater la collision dans le fichier
+
+/*
+ * La routine "updateExits" met à jour les temps de sortie de la boîte pour
+ * les particules d'indices compris dans la liste "indices". Elle indique 
+ * également l'indice du plan par leque sortent les particules.
+ */
+
+void updateExits(map<int,double> &exitTimes,
+				 map<int,int> &exitPlanes,
+				 vector<vector<double>> r,
+				 vector<vector<double>> v, 
+				 vector<int> indices,
+				 vector<double> boxDimensions,
+				 double tNow);
+
+/*
+ * La routine "nextExit" recherche la prochaine sortie de particule parmi celles
+ * listées dans "exitTimes" et "exitPlanes". 
+ */
+
+void nextExit(map<int,double> exitTimes,
+			  map<int,int> exitPlanes,
+			  int N, 			// nombre de particules dans le système
+			  double &tExit, 	// output, durée avant prochaine sortie
+			  int &exitPlane, 	// output, indice du plan traversé
+			  int &iPart, 		// output, indice de la particule qui sort
+			  double tNow);
+
+/*
+ * La routine "crossBorders" réalise le déplacement d'une particule qui 
+ * sortirait de la boîte en traversant le plan "exitPlane" en la remettant sur 
+ * le bord opposé à celui-ci.
+ */
+
+void crossBorder(vector<double> &r, // pos. actuelle de la part., à modifier
+				 vector<double> boxDimensions,
+				 int exitPlane); 
 
 #endif // MOVE_HPP
