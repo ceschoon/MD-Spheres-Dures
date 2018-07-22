@@ -4,7 +4,8 @@
     dures dans un réseau cubique faces centrées et donnant aux noeuds
 	une vitesse initiale distribuée selon une Maxwellienne.				    					
  																			
- 	Auteur: Maxime Jamotte						    						
+ 	Auteur: Maxime Jamotte
+ 			(Cédric Schoonen pour quelques adaptations)
  																			
  ****************************************************************************/
 
