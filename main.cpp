@@ -2,10 +2,10 @@
  *																		   *
  * 	Ce programme est une simulation d'un système de sphères dures.		   *
  *																		   *
- *	Utilisation: ./main mx my mz n T tSim dt dMax dr seed				   *
+ *	Utilisation: ./main mx my mz n T tSim seed							   *
  *																		   *
  *		mx*my*mz 	nombre de mailles cubiques FCC à simuler			   *
- * 		n 			densité (densité max = 1/32/sqrt(2) approx 0.022)	   *
+ * 		n 			densité (densité max = sqrt(2)/8 approx 0.17678)	   *
  *		T 	 		température											   *
  * 		tSim  		temps de simulation									   *
  *		seed 		graine pour la génération de nombres aléatoires		   *
@@ -83,6 +83,45 @@ bool compPairs(vector<int> a, vector<int> b)
 
 /******************************************************************************/
 
+/* Implémentation de la fonction "distanceCopies" */
+
+/* 
+ * Calcule la distance entre "r1" et "r2" en tenant compte de la périodicité 
+ * du système, de dimensions stockées dans "boxDimensions"
+ */
+
+double distanceCopies(vector<double> r1, vector<double> r2, 
+					  vector<double> boxDimensions)
+{
+	double x1 = r1[0];
+	double y1 = r1[1];
+	double z1 = r1[2];
+	
+	/* Calcule les distances avec chaque copie de r2 */
+	
+	vector<vector<int>> copies = getCopies();
+	vector<double> d(27,0);
+	
+	for (int i=0; i<27; i++)
+	{
+		double x2 = r2[0] + copies[i][0] * boxDimensions[0];
+		double y2 = r2[1] + copies[i][1] * boxDimensions[1];
+		double z2 = r2[2] + copies[i][2] * boxDimensions[2];
+		
+		d[i] = sqrt(pow(x1-x2,2) + pow(y1-y2,2) + pow(z1-z2,2));
+	}
+	
+	/* Recherche la distance avec la copie la plus proche (vraie distance) */
+	
+	double dMin = d[0]; 
+	
+	for (int i=1; i<27; i++) { if (d[i]<dMin) {dMin = d[i];} }
+	
+	return dMin;
+}
+
+/******************************************************************************/
+
 /* Implémentation de la fonction "main" */
 
 int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
@@ -93,11 +132,11 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	int mx = 3; 
 	int my = 3; 
 	int mz = 3;
-	double n = 0.00022; 
+	double n = 0.00017678; 
 	double T = 1; 
 	
 	// paramètres de simulation
-	double tSim = 100;  
+	double tSim = 1000;  
 	int seed = 1;
 	
 	/* Récupération des paramètres donnés en argument */
@@ -115,7 +154,8 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	
 	/* Initialisation des fichiers utilisés pour la simulation */
 	
-	// fichier "data/infoSimulation.dat" utilisé plus loin
+	// fichier "data/infoSimulation.dat" initialisé plus loin
+	// fichier "data/particle0Data.dat" initialisé plus loin
 	
 	std::ofstream fileCollisionData("data/collisionData.csv");
 	if (fileCollisionData)
@@ -136,8 +176,10 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	int N = 4*mx*my*mz; // nombre de particules
 	double a = pow(4/n, 1/3.0);
 	
-	vector<vector<double>> r = placementR({mx,my,mz}, a);
-	vector<vector<double>> v = placementV(N, T, eng);
+	vector<vector<double>> r0 = placementR({mx,my,mz}, a);
+	vector<vector<double>> v0 = placementV(N, T, eng);
+	vector<vector<double>> r = r0;
+	vector<vector<double>> v = v0;
 	
 	vector<double> boxDimensions = {a*mx, a*my, a*mz};
 	
@@ -193,6 +235,17 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	}
 	fileInfoSimulation.close();
 	
+	/* Enregistre la position initiale de la particule 0 */
+		
+	std::ofstream fileParticle0Data("data/particle0Data.csv");
+	if (fileParticle0Data)
+	{
+		fileParticle0Data << "t,x,y,z" << endl;
+		fileParticle0Data << 0 << ", " << r[0][0] << ", " << r[0][1] 
+			<< ", " << r[0][2] << endl;
+	}
+	fileParticle0Data.close();
+	
 	/* Simulation */
 	
 	map<int,double> exitTimes; // temps sortie boîte pour les particules
@@ -208,8 +261,10 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 		// sorties sont inconnues (tous au départ)
 	for (int i=0; i<N; i++) {indices[i] = i;}
 	
+	vector<double> excursionTimes(N,0);
+	
 	while (t<=tSim)
-	{	
+	{			
 		/* Met les temps de collisions/sorties de la boîte à jour */
 		
 		updateCollisions(collisionTimes,collisionTarget,r,v,indices,
@@ -252,8 +307,56 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 			indices = {iPart}; // indices dont sorties sont à mettre à jour.
 		}
 		
+		/* Enregistre la position de la particule 0 */
+		
+		std::ofstream fileParticle0Data("data/particle0Data.csv", 
+			std::ios_base::app);
+		if (fileParticle0Data)
+		{
+			fileParticle0Data << t << ", " << r[0][0] << ", " << r[0][1] 
+				<< ", " << r[0][2] << endl;
+		}
+		fileParticle0Data.close();
+		
+		/* Enregistre la 1e fois qu'une part se déplace de plus d'un rayon */
+		
+		for (int i=0; i<N; i++)
+		{	
+			double d = distanceCopies(r[i],r0[i],boxDimensions); 
+			
+			if (d>1 && excursionTimes[i]==0) {excursionTimes[i]=t;}
+		}
+		
+		/* Fini la simulation si toutes les part se sont assez déplacées */
+		/*
+		bool flag = true; // true = sont toutes sorties de la sphère initiale
+		
+		for (int i=0; i<N; i++)
+		{				
+			if (excursionTimes[i]==0) {flag = false; break;}
+		}
+		
+		if (flag) {break;} // fini la simulation
+		*/
 		// TODO: calculer la fonction de densité de paires
 	} 
+	
+	/* Enregistre les temps de sortie du rayon initial */
+	
+	std::ofstream fileExcursionData("data/excursionData.csv");
+	if (fileExcursionData)
+	{
+		fileExcursionData << "excursion times,fluidity" << endl;
+		
+		for (int i=0; i<N; i++)
+		{
+			double fluidity = 0;
+			if (excursionTimes[i]!=0) {fluidity = 1/excursionTimes[i];}
+			
+			fileExcursionData << excursionTimes[i] << ", " << fluidity << endl;
+		}
+	}
+	fileExcursionData.close();
 	
 	return 0;
 }

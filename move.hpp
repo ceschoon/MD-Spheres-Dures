@@ -18,6 +18,12 @@ using std::vector;
 using std::map;
 
 /*
+ * Liste des copies voisines du système
+ */
+
+vector<vector<int>> getCopies();
+
+/*
  * La routine "move" déplace toutes les particules de "t" dans le temps.
  */
 

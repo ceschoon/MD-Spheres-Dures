@@ -13,9 +13,7 @@ using std::endl;
 
 /******************************************************************************/
 
-/*
- * Liste des copies voisines du système
- */
+/* Implémentation de la fonction "getCopies" */
 
 vector<vector<int>> getCopies()
 {
