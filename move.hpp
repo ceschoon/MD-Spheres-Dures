@@ -13,9 +13,11 @@
 
 #include <vector>
 #include <map>
+#include <string>
 
 using std::vector;
 using std::map;
+using std::string;
 
 /*
  * Liste des copies voisines du système
@@ -83,7 +85,8 @@ void collide(vector<double> r1, // position de la particule #1 au présent
 			 vector<double> &v2,
 			 vector<double> boxDimensions,
 			 int iCopy2, 
-			 double tNow); // pour dater la collision dans le fichier
+			 double tNow,
+			 string suffix); // pour dater la collision dans le fichier
 
 /*
  * La routine "updateExits" met à jour les temps de sortie de la boîte pour

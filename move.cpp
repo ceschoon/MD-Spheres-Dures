@@ -280,7 +280,8 @@ void collide(vector<double> r1,
 			 vector<double> &v2,
 			 vector<double> boxDimensions,
 			 int iCopy2,
-			 double tNow) // instant présent
+			 double tNow,
+			 string suffix) // instant présent
 {	
 	/* Calcul de la position de la copie de la particule cible */
 	
@@ -306,12 +307,12 @@ void collide(vector<double> r1,
 	
 	/* Enregistre abs(v12.r12) pour le calcul de la pression */
 	
-	std::ofstream file("data/collisionData.csv", std::ios_base::app);
+	std::ofstream file("data/collisionData"+suffix+".csv", std::ios_base::app);
 	if (file)
 	{
 		file << tNow << ", " << abs(vDotr) << endl;
 	}
-	else { cout << "Unable to open file \"data/collisionData.csv\"" << endl;}
+	else { cout << "Unable to open file \"data/collisionData"+suffix+".csv\"" << endl;}
 	
 	file.close();
 }

@@ -2,7 +2,7 @@
  *																		   *
  * 	Ce programme est une simulation d'un système de sphères dures.		   *
  *																		   *
- *	Utilisation: ./main mx my mz n T tSim seed							   *
+ *	Utilisation: ./main mx my mz n T tSim seed suffix					   *
  *																		   *
  *		mx*my*mz 	nombre de mailles cubiques FCC à simuler			   *
  * 		n 			densité (densité max = sqrt(2)/8 approx 0.17678)	   *
@@ -10,6 +10,8 @@
  * 		tSim  		temps de simulation									   *
  *		seed 		graine pour la génération de nombres aléatoires		   *
  *					seed = 0 est remplacé par un vrai nombre aléatoire	   *
+ *		suffix 		suffixe servant à identifier les fichiers de la 	   *
+ *					simulation parmi d'autres.	 						   * 
  * 																		   *
  *	Auteurs du programme: Cédric Schoonen et Maxime Jamotte				   *
  *	Auteur de ce fichier: Cédric Schoonen								   *
@@ -33,10 +35,12 @@
 #include <math.h>
 #include <algorithm>
 #include <assert.h>
+#include <string>
 
 using std::cout;
 using std::endl;
 using std::vector;
+using std::string;
 
 /******************************************************************************/
 
@@ -138,10 +142,11 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	// paramètres de simulation
 	double tSim = 1000;  
 	int seed = 1;
+	string suffix = "";
 	
 	/* Récupération des paramètres donnés en argument */
 	
-	if (argc>7)
+	if (argc>8)
 	{
 		mx = atoi(argv[1]);
 		my = atoi(argv[2]);
@@ -150,6 +155,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 		T = atof(argv[5]);
 		tSim = atof(argv[6]);
 		seed = atoi(argv[7]);
+		suffix = argv[8];
 	}
 	
 	/* Initialisation des fichiers utilisés pour la simulation */
@@ -157,7 +163,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	// fichier "data/infoSimulation.dat" initialisé plus loin
 	// fichier "data/particle0Data.dat" initialisé plus loin
 	
-	std::ofstream fileCollisionData("data/collisionData.csv");
+	std::ofstream fileCollisionData("data/collisionData"+suffix+".csv");
 	if (fileCollisionData)
 	{
 		fileCollisionData << "t,vDotr" << endl;
@@ -218,7 +224,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	
 	/* Enregistrement des caractéristiques du système */
 	
-	std::ofstream fileInfoSimulation("data/infoSimulation.csv");
+	std::ofstream fileInfoSimulation("data/infoSimulation"+suffix+".csv");
 	if (fileInfoSimulation)
 	{
 		fileInfoSimulation << "mx,my,mz,n,T,tSim,seed,N,a" 
@@ -237,7 +243,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	
 	/* Enregistre la position initiale de la particule 0 */
 		
-	std::ofstream fileParticle0Data("data/particle0Data.csv");
+	std::ofstream fileParticle0Data("data/particle0Data"+suffix+".csv");
 	if (fileParticle0Data)
 	{
 		fileParticle0Data << "t,x,y,z" << endl;
@@ -294,7 +300,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 		{
 			move(r, v, tColl-t);
 			t = tColl;
-			collide(r[i1], v[i1], r[i2], v[i2], boxDimensions, iCopy2, t);
+			collide(r[i1],v[i1],r[i2],v[i2],boxDimensions,iCopy2,t,suffix);
 			
 			indices = {i1,i2}; // indices dont les coll sont à mettre à jour.
 		}
@@ -309,7 +315,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 		
 		/* Enregistre la position de la particule 0 */
 		
-		std::ofstream fileParticle0Data("data/particle0Data.csv", 
+		std::ofstream fileParticle0Data("data/particle0Data"+suffix+".csv", 
 			std::ios_base::app);
 		if (fileParticle0Data)
 		{
@@ -343,7 +349,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	
 	/* Enregistre les temps de sortie du rayon initial */
 	
-	std::ofstream fileExcursionData("data/excursionData.csv");
+	std::ofstream fileExcursionData("data/excursionData"+suffix+".csv");
 	if (fileExcursionData)
 	{
 		fileExcursionData << "excursion times,fluidity" << endl;
