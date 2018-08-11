@@ -22,7 +22,8 @@ if len(sys.argv)>=2:
 	num_threads = int(sys.argv[1])
 
 os.system("mkdir data_viriel")
-os.system("touch data_viriel/pressures.dat")
+os.system("touch data_viriel/pressures-Deltas.dat")
+
 
 def run_simulations(thread_id):
 
@@ -39,16 +40,25 @@ def run_simulations(thread_id):
 		N = 108
 		T = 1
 		t_Sim = 10000
+		Delta_t = 100
 
 		collisionData = pandas.read_csv("data/collisionData_Thread"+thread_id+".csv")
 		[t,vDotr] = numpy.transpose(collisionData.as_matrix(['t','vDotr']))
+		
+		p = numpy.ones(int((t[-1]-t[0])/Delta_t)+1)
+		for i in range(len(t)):
+			p[int((t[i]-t[0])/Delta_t)] += 1/((N-1)*3*T*Delta_t) * vDotr[i]
 
-		p = 1 + 1/(N*3*T*t_Sim) * numpy.sum(vDotr)  # mauvaise formule, il faut /(N-1) au lieu de /N -> à corriger dans l'analyse
+		p = p[:-1] # dernier bin incomplet
 		
 		# Enregistrement
 		
-		f = open("data_viriel/pressures.dat","a")
-		f.write(str(p)+"\n")
+		f = open("data_viriel/pressures-Deltas.dat","a")
+		
+		for i in range(len(p)-1):
+			f.write(str(p[i])+", ")
+		f.write(str(p[len(p)-1])+"\n")
+		
 		f.close()
 
 for i in range(num_threads):
