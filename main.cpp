@@ -13,6 +13,11 @@
  *		suffix 		suffixe servant à identifier les fichiers de la 	   *
  *					simulation parmi d'autres.	 						   * 
  * 																		   *
+ * 	Remarque: Les arguments doivent être mis ensemble, seul le suffixe est *
+ *			  optionnel. Si aucun argument est entré, la simulation prend  *
+ * 			  prend les arguments suivants par défaut: 					   *
+ *		./main 3 3 3 0.00017678 1 1000 1 								   *
+ * 																		   *
  *	Auteurs du programme: Cédric Schoonen et Maxime Jamotte				   *
  *	Auteur de ce fichier: Cédric Schoonen								   *
  *																		   *
@@ -146,7 +151,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	
 	/* Récupération des paramètres donnés en argument */
 	
-	if (argc>8)
+	if (argc>7)
 	{
 		mx = atoi(argv[1]);
 		my = atoi(argv[2]);
@@ -155,7 +160,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 		T = atof(argv[5]);
 		tSim = atof(argv[6]);
 		seed = atoi(argv[7]);
-		suffix = argv[8];
+		if (argc>8) {suffix = argv[8];}
 	}
 	
 	/* Initialisation des fichiers utilisés pour la simulation */
