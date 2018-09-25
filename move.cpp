@@ -304,17 +304,6 @@ void collide(vector<double> r1,
 	
 	for (int i=0; i<3; i++) {v1[i] = v1[i] + lambda*r12[i];}
 	for (int i=0; i<3; i++) {v2[i] = v2[i] - lambda*r12[i];}
-	
-	/* Enregistre abs(v12.r12) pour le calcul de la pression */
-	
-	std::ofstream file("data/collisionData"+suffix+".csv", std::ios_base::app);
-	if (file)
-	{
-		file << tNow << ", " << abs(vDotr) << endl;
-	}
-	else { cout << "Unable to open file \"data/collisionData"+suffix+".csv\"" << endl;}
-	
-	file.close();
 }
 
 /******************************************************************************/

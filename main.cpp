@@ -166,14 +166,6 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	/* Initialisation des fichiers utilisés pour la simulation */
 	
 	// fichier "data/infoSimulation.dat" initialisé plus loin
-	// fichier "data/particle0Data.dat" initialisé plus loin
-	
-	std::ofstream fileCollisionData("data/collisionData"+suffix+".csv");
-	if (fileCollisionData)
-	{
-		fileCollisionData << "t,vDotr" << endl;
-	}
-	fileCollisionData.close();
 	
 	/* Initialisation de la simulation */
 	 
@@ -246,17 +238,6 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 	}
 	fileInfoSimulation.close();
 	
-	/* Enregistre la position initiale de la particule 0 */
-		
-	std::ofstream fileParticle0Data("data/particle0Data"+suffix+".csv");
-	if (fileParticle0Data)
-	{
-		fileParticle0Data << "t,x,y,z" << endl;
-		fileParticle0Data << 0 << ", " << r[0][0] << ", " << r[0][1] 
-			<< ", " << r[0][2] << endl;
-	}
-	fileParticle0Data.close();
-	
 	/* Simulation */
 	
 	map<int,double> exitTimes; // temps sortie boîte pour les particules
@@ -317,57 +298,7 @@ int main(int argc, char *argv[]) // /!\ entree d'arguments pas idiot-proof
 			
 			indices = {iPart}; // indices dont sorties sont à mettre à jour.
 		}
-		
-		/* Enregistre la position de la particule 0 */
-		
-		std::ofstream fileParticle0Data("data/particle0Data"+suffix+".csv", 
-			std::ios_base::app);
-		if (fileParticle0Data)
-		{
-			fileParticle0Data << t << ", " << r[0][0] << ", " << r[0][1] 
-				<< ", " << r[0][2] << endl;
-		}
-		fileParticle0Data.close();
-		
-		/* Enregistre la 1e fois qu'une part se déplace de plus d'un rayon */
-		
-		for (int i=0; i<N; i++)
-		{	
-			double d = distanceCopies(r[i],r0[i],boxDimensions); 
-			
-			if (d>1 && excursionTimes[i]==0) {excursionTimes[i]=t;}
-		}
-		
-		/* Fini la simulation si toutes les part se sont assez déplacées */
-		/*
-		bool flag = true; // true = sont toutes sorties de la sphère initiale
-		
-		for (int i=0; i<N; i++)
-		{				
-			if (excursionTimes[i]==0) {flag = false; break;}
-		}
-		
-		if (flag) {break;} // fini la simulation
-		*/
-		// TODO: calculer la fonction de densité de paires
 	} 
-	
-	/* Enregistre les temps de sortie du rayon initial */
-	
-	std::ofstream fileExcursionData("data/excursionData"+suffix+".csv");
-	if (fileExcursionData)
-	{
-		fileExcursionData << "excursion times,fluidity" << endl;
-		
-		for (int i=0; i<N; i++)
-		{
-			double fluidity = 0;
-			if (excursionTimes[i]!=0) {fluidity = 1/excursionTimes[i];}
-			
-			fileExcursionData << excursionTimes[i] << ", " << fluidity << endl;
-		}
-	}
-	fileExcursionData.close();
 	
 	return 0;
 }
